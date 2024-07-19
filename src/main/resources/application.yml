@@ -1,0 +1,35 @@
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: user-management
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:7174/userdb
+    username: root
+    password: root
+
+  flyway:
+    url: jdbc:postgresql://localhost:7174/userdb
+    locations: classpath:db/migration
+
+jwt:
+  secret: mysecretkey
+  expiration: 3600000 # 1 hour in milliseconds
+
+logging:
+  level:
+    root: INFO
+    com.example.usermanagement: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: 9090
