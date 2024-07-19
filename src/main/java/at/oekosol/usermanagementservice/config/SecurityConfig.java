@@ -39,7 +39,7 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/users/register", "/login").permitAll()
+                        .pathMatchers("/register", "/login").permitAll()
                         .anyExchange().authenticated()
                 )
                 .formLogin(withDefaults()) // Use the new withDefaults() method
