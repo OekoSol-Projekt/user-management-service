@@ -22,25 +22,25 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Registers a new user.
      *
-     * @param user the user to register
-     * @return the registered user
+     * @param registrationRequestDto the registration request
+     * @return the response entity
      */
     @PostMapping("/register")
     public Mono<ResponseEntity<String>> register(@RequestBody RegistrationRequestDto registrationRequestDto) {
-        return userService.registerUser(registrationRequestDto)
-                .map(user -> ResponseEntity.ok("User registered successfully"))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(400).body(e.getMessage())));
+        return userService.registerUser(registrationRequestDto).map(user -> ResponseEntity.ok("User registered successfully")).onErrorResume(e -> Mono.just(ResponseEntity.status(400).body(e.getMessage())));
     }
 
     /**
@@ -51,14 +51,13 @@ public class UserController {
      */
     @PostMapping("/login")
     public Mono<ResponseEntity<String>> login(@RequestBody AuthenticationRequestDto authenticationRequestDto) {
-        return userService.findByUsername(authenticationRequestDto.getUsername())
-                .flatMap(userDetails -> {
-                    if (passwordEncoder.matches(authenticationRequestDto.getPassword(), userDetails.getPassword())) {
-                        return Mono.just(ResponseEntity.ok(jwtUtil.generateToken(userDetails)));
-                    } else {
-                        return Mono.just(ResponseEntity.status(401).build());
-                    }
-                });
+        return userService.findByUsername(authenticationRequestDto.getUsername()).flatMap(userDetails -> {
+            if (passwordEncoder.matches(authenticationRequestDto.getPassword(), userDetails.getPassword())) {
+                return Mono.just(ResponseEntity.ok(jwtUtil.generateToken(userDetails)));
+            } else {
+                return Mono.just(ResponseEntity.status(401).build());
+            }
+        });
     }
 
     /**
@@ -68,10 +67,6 @@ public class UserController {
      */
     @GetMapping("/me")
     public Mono<ResponseEntity<User>> getAuthenticatedUser() {
-        return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
-                .flatMap(authentication -> userService.findUserByUsername(authentication.getName())
-                        .map(ResponseEntity::ok)
-                        .defaultIfEmpty(ResponseEntity.status(404).build()));
+        return ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication).flatMap(authentication -> userService.findUserByUsername(authentication.getName()).map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.status(404).build()));
     }
 }
