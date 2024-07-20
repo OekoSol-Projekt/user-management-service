@@ -1,4 +1,4 @@
-package at.oekosol.usermanagementservice.controller;
+package at.oekosol.usermanagementservice.dtos;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import lombok.Data;
  * Represents an authentication request.
  */
 @Data
-public class AuthenticationRequest {
+public class AuthenticationRequestDto {
     private String username;
     private String password;
 }

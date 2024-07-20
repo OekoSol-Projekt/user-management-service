@@ -1,14 +1,14 @@
 CREATE TABLE roles
 (
-    id   SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE users
 (
-    id       SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(100)       NOT NULL
+    password VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE user_roles

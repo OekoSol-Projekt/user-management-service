@@ -18,8 +18,5 @@ public class User {
     private Long id;
     private String username;
     private String password;
-
-    @MappedCollection(idColumn = "user_id")
-    private Set<Role> roles;
 }
 

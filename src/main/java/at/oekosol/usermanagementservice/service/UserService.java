@@ -1,11 +1,16 @@
 package at.oekosol.usermanagementservice.service;
 
+import at.oekosol.usermanagementservice.dtos.RegistrationRequestDto;
 import at.oekosol.usermanagementservice.model.Role;
 import at.oekosol.usermanagementservice.model.User;
+import at.oekosol.usermanagementservice.model.UserRole;
 import at.oekosol.usermanagementservice.repository.RoleRepository;
 import at.oekosol.usermanagementservice.repository.UserRepository;
+import at.oekosol.usermanagementservice.repository.UserRoleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -25,23 +31,29 @@ public class UserService implements ReactiveUserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserRoleRepository userRoleRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, UserRoleRepository userRoleRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userRoleRepository = userRoleRepository;
     }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")))
-                .map(user -> org.springframework.security.core.userdetails.User
-                        .withUsername(user.getUsername())
-                        .password(user.getPassword())
-                        .roles(user.getRoles().stream().map(Role::getName).toArray(String[]::new))
-                        .build());
+                .flatMap(user -> userRoleRepository.findByUserId(user.getId())
+                        .flatMap(userRole -> roleRepository.findById(userRole.getRoleId()))
+                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                        .collectList()
+                        .map(authorities -> org.springframework.security.core.userdetails.User
+                                .withUsername(user.getUsername())
+                                .password(user.getPassword())
+                                .authorities(authorities)
+                                .build()));
     }
 
     /**
@@ -55,28 +67,34 @@ public class UserService implements ReactiveUserDetailsService {
     }
 
     /**
-     * Saves a new user.
+     * Registers a new user.
      *
-     * @param user the user to save
-     * @return the saved user
+     * @param registrationRequestDto the registration request
+     * @return the registered user
      */
-    public Mono<User> saveUser(User user) {
-        log.info("Saving new user with username: {}", user.getUsername());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user)
-                .flatMap(savedUser -> {
-                    if (savedUser.getRoles() != null) {
-                        return Mono.when(
-                                savedUser.getRoles().stream().map(role -> roleRepository.findByName(role.getName())
-                                        .switchIfEmpty(roleRepository.save(role))
-                                        .map(savedRole -> {
-                                            savedUser.getRoles().add(savedRole);
-                                            return savedRole;
-                                        })).collect(Collectors.toList())
-                        ).thenReturn(savedUser);
-                    } else {
-                        return Mono.just(savedUser);
-                    }
-                });
+    public Mono<Object> registerUser(RegistrationRequestDto registrationRequestDto) {
+        return userRepository.findByUsername(registrationRequestDto.username())
+                .flatMap(existingUser -> Mono.error(new RuntimeException("User already exists")))
+                .switchIfEmpty(Mono.defer(() -> {
+                    User newUser = new User();
+                    newUser.setUsername(registrationRequestDto.username());
+                    newUser.setPassword(passwordEncoder.encode(registrationRequestDto.password()));
+                    return userRepository.save(newUser)
+                            .flatMap(user -> {
+                                Mono<Void> rolesMono = Mono.when(
+                                        registrationRequestDto.roles().stream()
+                                                .map(roleName -> roleRepository.findByName(roleName)
+                                                        .switchIfEmpty(Mono.error(new RuntimeException("Role not found: " + roleName)))
+                                                        .flatMap(role -> {
+                                                            UserRole userRole = new UserRole();
+                                                            userRole.setUserId(user.getId());
+                                                            userRole.setRoleId(role.getId());
+                                                            return userRoleRepository.save(userRole);
+                                                        }))
+                                                .collect(Collectors.toList())
+                                );
+                                return rolesMono.then(Mono.just(user));
+                            });
+                }));
     }
 }
