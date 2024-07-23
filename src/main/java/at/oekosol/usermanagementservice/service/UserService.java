@@ -7,6 +7,7 @@ import at.oekosol.usermanagementservice.model.UserRole;
 import at.oekosol.usermanagementservice.repository.RoleRepository;
 import at.oekosol.usermanagementservice.repository.UserRepository;
 import at.oekosol.usermanagementservice.repository.UserRoleRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,20 +27,13 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService implements ReactiveUserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleRepository userRoleRepository;
-
-    @Autowired
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, UserRoleRepository userRoleRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.userRoleRepository = userRoleRepository;
-    }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {

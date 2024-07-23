@@ -1,6 +1,7 @@
 package at.oekosol.usermanagementservice.config;
 
 import at.oekosol.usermanagementservice.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -20,15 +21,11 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserService userService;
-
-    public SecurityConfig(JwtUtil jwtUtil, UserService userService) {
-        this.jwtUtil = jwtUtil;
-        this.userService = userService;
-    }
 
     /**
      * Configures the security filter chain.
@@ -41,10 +38,9 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("users/register", "users/login").permitAll()
+                        .pathMatchers("users/register", "users/login", "users/test", "*").permitAll()
                         .anyExchange().authenticated()
                 )
-                .formLogin(withDefaults()) // Use the new withDefaults() method
                 .logout(logoutSpec -> logoutSpec
                         .logoutUrl("/logout")
                 )
@@ -62,6 +58,4 @@ public class SecurityConfig {
     public JwtAuthenticationWebFilter jwtAuthenticationWebFilter(ReactiveAuthenticationManager authenticationManager) {
         return new JwtAuthenticationWebFilter(jwtUtil, authenticationManager);
     }
-
-
 }
