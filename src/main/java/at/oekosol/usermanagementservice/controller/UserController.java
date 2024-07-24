@@ -1,8 +1,8 @@
 package at.oekosol.usermanagementservice.controller;
 
 import at.oekosol.usermanagementservice.config.JwtUtil;
-import at.oekosol.usermanagementservice.dtos.AuthenticationRequestDto;
-import at.oekosol.usermanagementservice.dtos.RegistrationRequestDto;
+import at.oekosol.usermanagementservice.dtos.UserAuthenticationRequestDTO;
+import at.oekosol.usermanagementservice.dtos.UserRegistrationRequestDTO;
 import at.oekosol.usermanagementservice.model.User;
 import at.oekosol.usermanagementservice.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -30,26 +30,26 @@ public class UserController {
     /**
      * Registers a new user.
      *
-     * @param registrationRequestDto the registration request
+     * @param userRegistrationRequestDto the registration request
      * @return the response entity
      */
     @PostMapping("/register")
-    public Mono<ResponseEntity<String>> register(@RequestBody RegistrationRequestDto registrationRequestDto) {
-        log.info("Registering user: {}", registrationRequestDto.username());
-        return userService.registerUser(registrationRequestDto).map(user -> ResponseEntity.ok("User registered successfully")).onErrorResume(e -> Mono.just(ResponseEntity.status(400).body(e.getMessage())));
+    public Mono<ResponseEntity<String>> register(@RequestBody UserRegistrationRequestDTO userRegistrationRequestDto) {
+        log.info("Registering user: {}", userRegistrationRequestDto.username());
+        return userService.registerUser(userRegistrationRequestDto).map(user -> ResponseEntity.ok("User registered successfully")).onErrorResume(e -> Mono.just(ResponseEntity.status(400).body(e.getMessage())));
     }
 
     /**
      * Authenticates a user and returns a JWT token.
      *
-     * @param authenticationRequestDto the authentication request
+     * @param userAuthenticationRequestDto the authentication request
      * @return the JWT token
      */
     @PostMapping("/login")
-    public Mono<ResponseEntity<String>> login(@RequestBody AuthenticationRequestDto authenticationRequestDto) {
-        log.info("Authenticating user: {}", authenticationRequestDto.getUsername());
-        return userService.findByUsername(authenticationRequestDto.getUsername()).flatMap(userDetails -> {
-            if (passwordEncoder.matches(authenticationRequestDto.getPassword(), userDetails.getPassword())) {
+    public Mono<ResponseEntity<String>> login(@RequestBody UserAuthenticationRequestDTO userAuthenticationRequestDto) {
+        log.info("Authenticating user: {}", userAuthenticationRequestDto.getUsername());
+        return userService.findByUsername(userAuthenticationRequestDto.getUsername()).flatMap(userDetails -> {
+            if (passwordEncoder.matches(userAuthenticationRequestDto.getPassword(), userDetails.getPassword())) {
                 return Mono.just(ResponseEntity.ok(jwtUtil.generateToken(userDetails)));
             } else {
                 return Mono.just(ResponseEntity.status(401).build());

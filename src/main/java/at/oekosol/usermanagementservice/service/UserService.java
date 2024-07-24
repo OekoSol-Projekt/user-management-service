@@ -1,12 +1,10 @@
 package at.oekosol.usermanagementservice.service;
 
-import at.oekosol.usermanagementservice.dtos.RegistrationRequestDto;
+import at.oekosol.usermanagementservice.dtos.UserRegistrationRequestDTO;
 import at.oekosol.usermanagementservice.exception.RoleNotFoundException;
 import at.oekosol.usermanagementservice.model.User;
-import at.oekosol.usermanagementservice.model.UserRole;
 import at.oekosol.usermanagementservice.repository.RoleRepository;
 import at.oekosol.usermanagementservice.repository.UserRepository;
-import at.oekosol.usermanagementservice.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -50,17 +48,17 @@ public class UserService implements ReactiveUserDetailsService {
     /**
      * Registers a new user.
      *
-     * @param registrationRequestDto the registration request
+     * @param userRegistrationRequestDto the registration request
      * @return the registered user
      */
-    public Mono<Object> registerUser(RegistrationRequestDto registrationRequestDto) {
-        return userRepository.findByUsername(registrationRequestDto.username())
+    public Mono<Object> registerUser(UserRegistrationRequestDTO userRegistrationRequestDto) {
+        return userRepository.findByUsername(userRegistrationRequestDto.username())
                 .flatMap(existingUser -> Mono.error(new UsernameNotFoundException("User already exists"))).switchIfEmpty(Mono.defer(() -> {
                     User newUser = new User();
-                    newUser.setUsername(registrationRequestDto.username());
-                    newUser.setPassword(passwordEncoder.encode(registrationRequestDto.password()));
+                    newUser.setUsername(userRegistrationRequestDto.username());
+                    newUser.setPassword(passwordEncoder.encode(userRegistrationRequestDto.password()));
                     return userRepository.save(newUser).flatMap(user -> {
-                        Mono<Void> rolesMono = Mono.when(registrationRequestDto.roles().stream()
+                        Mono<Void> rolesMono = Mono.when(userRegistrationRequestDto.roles().stream()
                                 .map(roleName -> roleRepository.findByName(roleName).switchIfEmpty(Mono.error(new RoleNotFoundException("Role not found: " + roleName))).flatMap(role -> {
                                     UserRole userRole = new UserRole();
                                     userRole.setUserId(user.getId());

@@ -6,7 +6,7 @@ import lombok.Data;
  * Represents an authentication request.
  */
 @Data
-public class AuthenticationRequestDto {
+public class UserAuthenticationRequestDTO {
     private String username;
     private String password;
 }

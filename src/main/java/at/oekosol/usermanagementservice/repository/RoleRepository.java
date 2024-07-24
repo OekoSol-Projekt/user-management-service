@@ -9,5 +9,4 @@ import reactor.core.publisher.Mono;
  * Repository for performing CRUD operations on Role entities.
  */
 public interface RoleRepository extends ReactiveCrudRepository<Role, Long> {
-    Mono<Role> findByName(String name);
 }

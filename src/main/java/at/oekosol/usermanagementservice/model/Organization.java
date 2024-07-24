@@ -10,7 +10,4 @@ public abstract class Organization {
 
     @Id
     private Long id;
-    private String name;
-    private String address;
-    private User owner;
 }
