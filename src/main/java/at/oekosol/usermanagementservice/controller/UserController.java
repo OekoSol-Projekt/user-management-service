@@ -36,7 +36,8 @@ public class UserController {
     @PostMapping("/register")
     public Mono<ResponseEntity<String>> register(@RequestBody UserRegistrationRequestDTO userRegistrationRequestDto) {
         log.info("Registering user: {}", userRegistrationRequestDto.username());
-        return userService.registerUser(userRegistrationRequestDto).map(user -> ResponseEntity.ok("User registered successfully")).onErrorResume(e -> Mono.just(ResponseEntity.status(400).body(e.getMessage())));
+        return null;
+        //return userService.registerUser(userRegistrationRequestDto).map(user -> ResponseEntity.ok("User registered successfully")).onErrorResume(e -> Mono.just(ResponseEntity.status(400).body(e.getMessage())));
     }
 
     /**
@@ -64,7 +65,8 @@ public class UserController {
      */
     @GetMapping("/me")
     public Mono<ResponseEntity<User>> getAuthenticatedUser() {
-        return ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication).flatMap(authentication -> userService.findUserByUsername(authentication.getName()).map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.status(404).build()));
+        return null;
+        //return ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication).flatMap(authentication -> userService.findUserByUsername(authentication.getName()).map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.status(404).build()));
     }
 
     @GetMapping("/test")
