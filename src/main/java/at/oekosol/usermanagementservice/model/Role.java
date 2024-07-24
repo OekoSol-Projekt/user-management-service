@@ -13,6 +13,6 @@ public class Role {
 
     @Id
     private Long id;
-    private String name;
+    private String role_name;
 }
 

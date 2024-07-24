@@ -8,6 +8,10 @@ spring:
     url: r2dbc:postgresql://localhost:7174/userdb
     username: root
     password: root
+    properties:
+      logging:
+        level:
+          DEBUG
 
   flyway:
     url: jdbc:postgresql://localhost:7174/userdb
@@ -21,9 +25,13 @@ logging:
   level:
     root: INFO
     at.oekosol.usermanagementservice: DEBUG
-    com.netflix.discovery: DEBUG
-    com.netflix.eureka: DEBUG
-
+    org.springframework.r2dbc.core: DEBUG
+    io.r2dbc.spi: DEBUG
+    org.springframework.data.r2dbc.repository: DEBUG
+    org.springframework.data.r2dbc: TRACE
+    org.springframework.data.r2dbc.dialect: TRACE
+    org.springframework.data.r2dbc.mapping: TRACE
+    io.r2dbc.postgresql.client: TRACE
 
 management:
   endpoints:

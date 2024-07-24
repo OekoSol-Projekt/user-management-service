@@ -7,28 +7,29 @@ CREATE TABLE roles
 CREATE TABLE users
 (
     id       SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    email    VARCHAR(50) UNIQUE NOT NULL,
+    name     VARCHAR(50)        NOT NULL,
+    surname  VARCHAR(50)        NOT NULL,
     password VARCHAR(100)       NOT NULL
 );
 
-CREATE TABLE organizations
+CREATE TABLE organization
 (
-    id SERIAL PRIMARY KEY
+    id   SERIAL PRIMARY KEY,
+    type VARCHAR(20)
 );
 
-CREATE TABLE companies
+CREATE TABLE company
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(255) NOT NULL,
-    address VARCHAR(255),
-    FOREIGN KEY (id) REFERENCES organizations (id)
+    organization_id INTEGER PRIMARY KEY REFERENCES organization (id),
+    name            VARCHAR(255) NOT NULL,
+    address         VARCHAR(255)
 );
 
-CREATE TABLE personal_orgs
+CREATE TABLE personal_org
 (
-    id       SERIAL PRIMARY KEY,
-    owner_id BIGINT,
-    FOREIGN KEY (id) REFERENCES organizations (id),
+    organization_id INTEGER PRIMARY KEY REFERENCES organization (id),
+    owner_id        BIGINT,
     FOREIGN KEY (owner_id) REFERENCES users (id)
 );
 
@@ -39,6 +40,16 @@ CREATE TABLE organization_user_roles
     user_id         BIGINT,
     organization_id BIGINT,
     FOREIGN KEY (user_id) REFERENCES users (id),
-    FOREIGN KEY (organization_id) REFERENCES organizations (id),
+    FOREIGN KEY (organization_id) REFERENCES organization (id),
+    FOREIGN KEY (role_id) REFERENCES roles (id)
+);
+
+CREATE TABLE pending_invites
+(
+    id              SERIAL PRIMARY KEY,
+    organization_id BIGINT,
+    email           VARCHAR(255) NOT NULL,
+    role_id         BIGINT,
+    FOREIGN KEY (organization_id) REFERENCES organization (id),
     FOREIGN KEY (role_id) REFERENCES roles (id)
 );
